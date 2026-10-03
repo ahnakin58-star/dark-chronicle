@@ -72,7 +72,7 @@ function applyResponse(n: GameState, res: DMResponse, rolls: { damage?: RollResu
       const dup = res.startCombat!.filter((k) => k === key).length > 1;
       return { ...t, id: `${key}-${i}-${uid()}`, hp: t.maxHp, name: dup ? `${t.name} ${String.fromCharCode(65 + i)}` : t.name };
     });
-    n.combat = { round: 1, defending: false, targetId: n.enemies[0].id, turn: "player" };
+    n.combat = { round: 1, defending: false, targetId: n.enemies[0]!.id, turn: "player" };
     n.pendingCheck = null;
     n.choices = [];
     log(n, "Combat begins!", "failure", n.enemies.map((e) => e.name).join(", "));

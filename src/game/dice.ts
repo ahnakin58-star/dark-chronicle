@@ -26,5 +26,5 @@ export function rollExpr(expr: string, critical = false): RollResult {
 
 export function roll4d6DropLowest() {
   const r = [rollDie(6), rollDie(6), rollDie(6), rollDie(6)].sort((a, b) => a - b);
-  return r[1] + r[2] + r[3];
+  return r[1]! + r[2]! + r[3]!;
 }
