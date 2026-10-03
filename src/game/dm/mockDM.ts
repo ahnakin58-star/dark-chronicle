@@ -3,7 +3,7 @@ import type { SceneId, Skill } from "../types";
 import type { DMContext, DMInput, DMResponse, DungeonMaster } from "./types";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
+const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)]!;
 
 const SKILL_KEYWORDS: [RegExp, Skill][] = [
   [/insight|motive|trust|read (his|her|their|the guard)|lying/i, "Insight"],
