@@ -26,7 +26,7 @@ export const createInitialState = (): GameState => ({
   dmError: null,
 });
 
-function log(n: GameState, title: string, tone: Tone, detail?: string) {
+function log(n: GameState, title: string, tone: Tone, detail?: string | undefined) {
   n.log.unshift({ id: uid(), time: Date.now(), title, detail, tone });
   n.log = n.log.slice(0, 50);
 }
@@ -40,7 +40,7 @@ function addItem(c: Character, item: Item) {
 }
 const fmtRolls = (r: RollResult) => `[${r.rolls.join(", ")}]${r.bonus ? fmtMod(r.bonus) : ""}`;
 
-function applyResponse(n: GameState, res: DMResponse, rolls: { damage?: RollResult; heal?: RollResult }) {
+function applyResponse(n: GameState, res: DMResponse, rolls: { damage?: RollResult | undefined; heal?: RollResult | undefined }) {
   const c = n.character!;
   if (res.narration) say(n, "dm", res.narration);
   if (res.npc) say(n, "npc", res.npc.line, res.npc.name);
@@ -68,7 +68,7 @@ function applyResponse(n: GameState, res: DMResponse, rolls: { damage?: RollResu
   n.choices = res.choices ?? [];
   if (res.startCombat?.length) {
     n.enemies = res.startCombat.map((key, i) => {
-      const t = ENEMIES[key];
+      const t = ENEMIES[key]!;
       const dup = res.startCombat!.filter((k) => k === key).length > 1;
       return { ...t, id: `${key}-${i}-${uid()}`, hp: t.maxHp, name: dup ? `${t.name} ${String.fromCharCode(65 + i)}` : t.name };
     });
@@ -85,7 +85,7 @@ export function useGame() {
   const [state, setState] = useState<GameState>(createInitialState);
   const stateRef = useRef(state);
   stateRef.current = state;
-  const lastInput = useRef<{ input: DMInput; text?: string } | null>(null);
+  const lastInput = useRef<{ input: DMInput; text?: string | undefined } | null>(null);
   const dm = useMemo(() => getDungeonMaster(), []);
 
   const mutate = (fn: (n: GameState) => void) =>

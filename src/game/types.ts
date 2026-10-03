@@ -19,9 +19,9 @@ export interface Item {
   kind: "weapon" | "armor" | "potion" | "misc";
   description: string;
   qty: number;
-  damage?: string;
-  ability?: Ability;
-  heal?: string;
+  damage?: string | undefined;
+  ability?: Ability | undefined;
+  heal?: string | undefined;
 }
 
 export interface Character {
@@ -59,7 +59,7 @@ export interface LogEntry {
   id: string;
   time: number;
   title: string;
-  detail?: string;
+  detail?: string | undefined;
   tone: Tone;
 }
 
@@ -67,7 +67,7 @@ export interface NarrativeEntry {
   id: string;
   speaker: "dm" | "player" | "npc" | "system";
   text: string;
-  name?: string;
+  name?: string | undefined;
 }
 
 export interface Quest {
@@ -98,9 +98,9 @@ export interface LastRoll {
   sides: number;
   value: number;
   label: string;
-  total?: number;
-  crit?: boolean;
-  fumble?: boolean;
+  total?: number | undefined;
+  crit?: boolean | undefined;
+  fumble?: boolean | undefined;
 }
 
 export interface GameState {

@@ -17,16 +17,16 @@ export type DMInput =
 /** Structured response. A real AI provider should return this shape (e.g. via structured output). */
 export interface DMResponse {
   narration: string;
-  npc?: { name: string; line: string };
-  check?: SkillCheck;
-  startCombat?: string[]; // keys of ENEMIES
-  completeObjective?: { questId: string; index: number }[];
-  scene?: SceneId;
-  damage?: string; // dice expression applied to the player
-  heal?: string;
-  loot?: Item[];
-  choices?: string[];
-  victory?: boolean;
+  npc?: { name: string; line: string } | undefined;
+  check?: SkillCheck | undefined;
+  startCombat?: string[] | undefined; // keys of ENEMIES
+  completeObjective?: { questId: string; index: number }[] | undefined;
+  scene?: SceneId | undefined;
+  damage?: string | undefined; // dice expression applied to the player
+  heal?: string | undefined;
+  loot?: Item[] | undefined;
+  choices?: string[] | undefined;
+  victory?: boolean | undefined;
 }
 
 export interface DungeonMaster {
