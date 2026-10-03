@@ -1,11 +1,13 @@
-import type { Character, Item, NarrativeEntry, Quest, SceneId, SkillCheck } from "../types";
+import type { Character, Item, LoreCategory, NarrativeEntry, Quest, Scenario, SceneId, SkillCheck } from "../types";
 
-/** Everything a Dungeon Master (mock or real AI) needs to know about the world. */
+/** Everything a Dungeon Master needs to know about the world. */
 export interface DMContext {
+  scenario: Scenario;
   character: Character;
   scene: SceneId;
   quests: Quest[];
   recent: NarrativeEntry[];
+  knownLore: string[]; // ids of discovered lore
 }
 
 export type DMInput =
@@ -14,19 +16,21 @@ export type DMInput =
   | { kind: "check"; check: SkillCheck; total: number; natural: number; success: boolean }
   | { kind: "combat-end"; victory: boolean };
 
-/** Structured response. A real AI provider should return this shape (e.g. via structured output). */
+/** Structured response returned by the DM. */
 export interface DMResponse {
   narration: string;
   npc?: { name: string; line: string } | undefined;
   check?: SkillCheck | undefined;
-  startCombat?: string[] | undefined; // keys of ENEMIES
+  startCombat?: string[] | undefined; // keys of scenario.enemies
   completeObjective?: { questId: string; index: number }[] | undefined;
   scene?: SceneId | undefined;
-  damage?: string | undefined; // dice expression applied to the player
+  damage?: string | undefined;
   heal?: string | undefined;
   loot?: Item[] | undefined;
   choices?: string[] | undefined;
   victory?: boolean | undefined;
+  revealLore?: string[] | undefined;
+  newLore?: { category: LoreCategory; title: string; text: string }[] | undefined;
 }
 
 export interface DungeonMaster {
