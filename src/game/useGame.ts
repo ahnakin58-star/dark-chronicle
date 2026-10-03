@@ -299,7 +299,7 @@ export function useGame() {
     await enemyTurn();
   }
 
-  async function useItem(id: string) {
+  async function drinkItem(id: string) {
     const s = stateRef.current;
     const item = s.character?.inventory.find((i) => i.id === id);
     if (!item?.heal || item.qty <= 0 || s.status !== "playing") return;
@@ -331,7 +331,7 @@ export function useGame() {
     });
   }
 
-  return { state, dmName: dm.name, start, restart, rollFree, resolveCheck, declineCheck, submitAction, attack, defend, useItem, equip, setTarget, retryDM };
+  return { state, dmName: dm.name, start, restart, rollFree, resolveCheck, declineCheck, submitAction, attack, defend, drinkItem, equip, setTarget, retryDM };
 }
 
 export type GameApi = ReturnType<typeof useGame>;
