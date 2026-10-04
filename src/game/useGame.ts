@@ -1,30 +1,13 @@
 import { useMemo, useRef, useState } from "react";
-import { checkBonus, ENEMIES, FISTS, initialQuests, xpForNextLevel } from "./data";
+import { checkBonus, FISTS, xpForNextLevel } from "./data";
 import { abilityMod, fmtMod, rollDie, rollExpr, type RollResult } from "./dice";
 import { getDungeonMaster, type DMInput, type DMResponse } from "./dm";
-import type { Character, GameState, Item, NarrativeEntry, Tone } from "./types";
+import type { Character, GameState, Item, NarrativeEntry, Scenario, Tone } from "./types";
 
 let counter = 0;
 const uid = () => `${Date.now().toString(36)}-${(counter++).toString(36)}`;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const ROLL_MS = 700;
-
-export const createInitialState = (): GameState => ({
-  character: null,
-  scene: "gate",
-  enemies: [],
-  combat: null,
-  narrative: [],
-  log: [],
-  quests: initialQuests(),
-  pendingCheck: null,
-  choices: [],
-  status: "playing",
-  thinking: false,
-  rolling: null,
-  lastRoll: null,
-  dmError: null,
-});
 
 function log(n: GameState, title: string, tone: Tone, detail?: string | undefined) {
   n.log.unshift({ id: uid(), time: Date.now(), title, detail, tone });
@@ -40,7 +23,7 @@ function addItem(c: Character, item: Item) {
 }
 const fmtRolls = (r: RollResult) => `[${r.rolls.join(", ")}]${r.bonus ? fmtMod(r.bonus) : ""}`;
 
-function applyResponse(n: GameState, res: DMResponse, rolls: { damage?: RollResult | undefined; heal?: RollResult | undefined }) {
+function applyResponse(n: GameState, scenario: Scenario, res: DMResponse, rolls: { damage?: RollResult | undefined; heal?: RollResult | undefined }) {
   const c = n.character!;
   if (res.narration) say(n, "dm", res.narration);
   if (res.npc) say(n, "npc", res.npc.line, res.npc.name);
@@ -63,12 +46,24 @@ function applyResponse(n: GameState, res: DMResponse, rolls: { damage?: RollResu
       log(n, "Objective complete", "success", obj.text);
     }
   });
+  res.revealLore?.forEach((id) => {
+    const entry = scenario.lore.find((l) => l.id === id);
+    if (entry && !n.lore.some((l) => l.id === id)) {
+      n.lore.push(entry);
+      log(n, `Codex: ${entry.title}`, "neutral", "New lore discovered");
+    }
+  });
+  res.newLore?.forEach((l) => {
+    if (n.lore.some((x) => x.title === l.title)) return;
+    n.lore.push({ ...l, id: `dm-${uid()}` });
+    log(n, `Codex: ${l.title}`, "neutral", "New lore discovered");
+  });
   if (res.scene) n.scene = res.scene;
   n.pendingCheck = res.check ?? null;
   n.choices = res.choices ?? [];
   if (res.startCombat?.length) {
     n.enemies = res.startCombat.map((key, i) => {
-      const t = ENEMIES[key]!;
+      const t = scenario.enemies[key]!;
       const dup = res.startCombat!.filter((k) => k === key).length > 1;
       return { ...t, id: `${key}-${i}-${uid()}`, hp: t.maxHp, name: dup ? `${t.name} ${String.fromCharCode(65 + i)}` : t.name };
     });
@@ -81,8 +76,8 @@ function applyResponse(n: GameState, res: DMResponse, rolls: { damage?: RollResu
   if (c.hp <= 0) n.status = "defeat";
 }
 
-export function useGame() {
-  const [state, setState] = useState<GameState>(createInitialState);
+export function useGame(initial: GameState, scenario: Scenario) {
+  const [state, setState] = useState<GameState>(() => ({ ...initial, thinking: false, rolling: null, dmError: initial.dmError }));
   const stateRef = useRef(state);
   stateRef.current = state;
   const lastInput = useRef<{ input: DMInput; text?: string | undefined } | null>(null);
@@ -109,12 +104,12 @@ export function useGame() {
     });
     try {
       const cur = stateRef.current;
-      const res = await dm.respond({ character: ch, scene: cur.scene, quests: cur.quests, recent: cur.narrative.slice(-8) }, input);
+      const res = await dm.respond({ scenario, character: ch, scene: cur.scene, quests: cur.quests, recent: cur.narrative.slice(-10), knownLore: cur.lore.map((l) => l.id) }, input);
       const damage = res.damage ? rollExpr(res.damage) : undefined;
       const heal = res.heal ? rollExpr(res.heal) : undefined;
       mutate((n) => {
         n.thinking = false;
-        applyResponse(n, res, { damage, heal });
+        applyResponse(n, scenario, res, { damage, heal });
       });
     } catch (e) {
       mutate((n) => {
@@ -129,17 +124,14 @@ export function useGame() {
     if (l) void askDM(l.input);
   }
 
-  function start(character: Character) {
-    const fresh = { ...createInitialState(), character };
-    stateRef.current = fresh;
-    setState(fresh);
-    void askDM({ kind: "start" }, undefined, character);
-  }
-
-  function restart() {
-    const fresh = createInitialState();
-    stateRef.current = fresh;
-    setState(fresh);
+  /** Opens the tale with the scenario's prepared opening (no AI call needed). */
+  function begin() {
+    if (stateRef.current.narrative.length) return;
+    mutate((n) => {
+      say(n, "dm", scenario.openingNarration);
+      if (scenario.openingNpc) say(n, "npc", scenario.openingNpc.line, scenario.openingNpc.name);
+      n.choices = scenario.startChoices;
+    });
   }
 
   async function rollFree(sides: number) {
@@ -239,7 +231,7 @@ export function useGame() {
       if (newHp <= 0) {
         n.status = "defeat";
         n.combat = null;
-        say(n, "dm", "Your vision narrows to a point of cold light. The crypt claims another soul.");
+        say(n, "dm", "Your vision narrows to a point of cold light. The dark claims another soul.");
       } else {
         n.combat!.round += 1;
         n.combat!.defending = false;
@@ -331,7 +323,7 @@ export function useGame() {
     });
   }
 
-  return { state, dmName: dm.name, start, restart, rollFree, resolveCheck, declineCheck, submitAction, attack, defend, drinkItem, equip, setTarget, retryDM };
+  return { state, scenario, dmName: dm.name, begin, rollFree, resolveCheck, declineCheck, submitAction, attack, defend, drinkItem, equip, setTarget, retryDM };
 }
 
 export type GameApi = ReturnType<typeof useGame>;
