@@ -5,7 +5,7 @@ import { abilityMod, fmtMod, roll4d6DropLowest } from "@/game/dice";
 import type { Character, Stats } from "@/game/types";
 import { cn } from "@/lib/utils";
 
-export function CharacterCreation({ onStart }: { onStart: (c: Character) => void }) {
+export function CharacterCreation({ onStart, submitLabel = "Begin the Adventure" }: { onStart: (c: Character) => void; submitLabel?: string }) {
   const [name, setName] = useState("Kael Ashborn");
   const [race, setRace] = useState("Human");
   const [cls, setCls] = useState<ClassName>("Fighter");
@@ -22,9 +22,9 @@ export function CharacterCreation({ onStart }: { onStart: (c: Character) => void
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 md:py-16">
       <div className="mb-10 text-center">
-        <p className="rune-title mb-3 text-xs text-gold">A tale of ash and bone</p>
-        <h1 className="font-display text-4xl text-foreground md:text-6xl">The Hollow Crypt</h1>
-        <p className="mx-auto mt-3 max-w-lg text-lg italic text-muted-foreground">Forge your hero. The dead of Ashenford will not wait long.</p>
+        <p className="rune-title mb-3 text-xs text-gold">Step 1 of 2 · The Sundered Reach</p>
+        <h1 className="font-display text-4xl text-foreground md:text-6xl">Forge Your Hero</h1>
+        <p className="mx-auto mt-3 max-w-lg text-lg italic text-muted-foreground">Every tale needs someone foolish enough to walk into the dark.</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -102,7 +102,7 @@ export function CharacterCreation({ onStart }: { onStart: (c: Character) => void
             ))}
           </ul>
           <button onClick={() => onStart(preview)} className="rune-title mt-auto w-full rounded-md bg-ink px-4 py-3 text-sm text-parchment transition hover:bg-crimson max-lg:mt-6">
-            Begin the Adventure
+            {submitLabel}
           </button>
         </aside>
       </div>

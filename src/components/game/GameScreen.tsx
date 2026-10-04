@@ -1,29 +1,38 @@
-import { RotateCcw, Skull, Trophy } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ChevronLeft, Cloud, CloudOff, Loader2, Skull, Trophy } from "lucide-react";
 import type { GameApi } from "@/game/useGame";
 import { CharacterSheet } from "./CharacterSheet";
 import { CombatPanel } from "./CombatPanel";
 import { DiceTray } from "./DiceTray";
 import { Inventory } from "./Inventory";
+import { LoreCodex } from "./LoreCodex";
 import { NarrativePanel } from "./NarrativePanel";
 import { ActivityLog, QuestTracker } from "./SidePanels";
 
-const SCENE_NAMES = { gate: "The North Gate", chapel: "Chapel of Saint Varra", crypt: "The Ossuary", sanctum: "The Warden's Sanctum", end: "Dawn over Ashenford" };
+export type SaveStatus = "saved" | "saving" | "error";
 
-export function GameScreen({ game }: { game: GameApi }) {
-  const { state } = game;
+export function GameScreen({ game, saveStatus }: { game: GameApi; saveStatus: SaveStatus }) {
+  const { state, scenario } = game;
   const c = state.character!;
   const canDrink = state.status === "playing" && (!state.combat || (state.combat.turn === "player" && !state.rolling));
+  const sceneName = scenario.scenes.find((s) => s.id === state.scene)?.name ?? "";
 
   return (
     <div className="mx-auto max-w-[1600px] px-3 py-3 md:px-5">
       <header className="mb-3 flex items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-xl text-foreground md:text-2xl">The Hollow Crypt</h1>
-          <p className="rune-title text-[11px] text-gold">{SCENE_NAMES[state.scene]}</p>
+        <div className="flex min-w-0 items-center gap-2">
+          <Link to="/adventures" aria-label="Back to adventures" className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground">
+            <ChevronLeft className="h-5 w-5" />
+          </Link>
+          <div className="min-w-0">
+            <h1 className="truncate font-display text-xl text-foreground md:text-2xl">{scenario.title}</h1>
+            <p className="rune-title truncate text-[11px] text-gold">{sceneName}</p>
+          </div>
         </div>
-        <button onClick={game.restart} className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground transition hover:bg-accent hover:text-foreground">
-          <RotateCcw className="h-3.5 w-3.5" /> New hero
-        </button>
+        <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
+          {saveStatus === "saving" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : saveStatus === "error" ? <CloudOff className="h-3.5 w-3.5 text-crimson" /> : <Cloud className="h-3.5 w-3.5 text-verdant" />}
+          {saveStatus === "saving" ? "Saving…" : saveStatus === "error" ? "Not saved" : "Saved"}
+        </span>
       </header>
 
       <div className="grid gap-3 lg:grid-cols-[290px_minmax(0,1fr)_310px]">
@@ -42,6 +51,7 @@ export function GameScreen({ game }: { game: GameApi }) {
         <aside className="order-3 space-y-3 lg:h-[calc(100vh-7.5rem)] lg:overflow-y-auto scroll-thin">
           <DiceTray rolling={state.rolling} lastRoll={state.lastRoll} onRoll={game.rollFree} />
           <QuestTracker quests={state.quests} />
+          <LoreCodex discovered={state.lore} total={scenario.lore.length} />
           <ActivityLog log={state.log} />
         </aside>
       </div>
@@ -52,11 +62,11 @@ export function GameScreen({ game }: { game: GameApi }) {
             {state.status === "victory" ? <Trophy className="mx-auto h-12 w-12 text-gold drop-shadow" /> : <Skull className="mx-auto h-12 w-12 text-crimson" />}
             <h2 className="mt-3 font-display text-3xl text-ink">{state.status === "victory" ? "Victory" : "You Have Fallen"}</h2>
             <p className="mt-2 text-lg italic text-ink-muted">
-              {state.status === "victory" ? `${c.name} has laid the Bone Warden to rest. Ashenford will sing of this.` : `${c.name}'s tale ends in the dark. Others will come.`}
+              {state.status === "victory" ? `${c.name} has ended the threat. The Reach will sing of "${scenario.title}".` : `${c.name}'s tale ends in the dark. Others will come.`}
             </p>
-            <button onClick={game.restart} className="rune-title mt-6 rounded-md bg-ink px-5 py-3 text-sm text-parchment transition hover:bg-crimson">
-              Forge a new hero
-            </button>
+            <Link to="/new" className="rune-title mt-6 inline-block rounded-md bg-ink px-5 py-3 text-sm text-parchment transition hover:bg-crimson">
+              Begin a new tale
+            </Link>
           </div>
         </div>
       )}
