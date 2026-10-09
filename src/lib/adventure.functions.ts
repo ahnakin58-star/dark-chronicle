@@ -16,7 +16,7 @@ export const generateScenario = createServerFn({ method: "POST" })
     const { forgeScenario } = await import("./adventure.server");
     const { generateJson, AiError } = await import("./ai.server");
     try {
-      const scenario = await forgeScenario(data, (s, p) => generateJson(s, p, "medium"));
+      const scenario = await forgeScenario(data, (s, p) => generateJson(s, p, "low"));
       return { ok: true, scenario };
     } catch (e) {
       return { ok: false, error: e instanceof AiError ? e.message : "The forge went cold. Try again." };
