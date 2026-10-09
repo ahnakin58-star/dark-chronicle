@@ -1,7 +1,7 @@
 import { SKILL_ABILITY } from "@/game/data";
 import type { DMContext, DMInput, DMResponse } from "@/game/dm/types";
 import type { EnemyTemplate, Item, LoreCategory, LoreEntry, Quest, Scenario, ScenarioScene, Skill } from "@/game/types";
-import { FACTIONS, REGIONS, THREATS, TONES, TWISTS, WORLD_LORE, factionById, regionById, worldCanonText } from "@/game/world";
+import { FACTIONS, REGIONS, THREATS, TONES, TWISTS, factionById, regionById, worldCanonText } from "@/game/world";
 
 const SKILLS = Object.keys(SKILL_ABILITY) as Skill[];
 const LORE_CATS: LoreCategory[] = ["place", "faction", "person", "creature", "history", "deity"];
@@ -220,4 +220,4 @@ function normalizeDM(raw: unknown, ctx: DMContext): DMResponse {
   return out;
 }
 
-export { WORLD_LORE };
+
