@@ -10,7 +10,9 @@ const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)]
 const str = (v: unknown, max = 600, fb = "") => (typeof v === "string" ? v.trim().slice(0, max) : fb);
 const num = (v: unknown, lo: number, hi: number, fb: number) => (typeof v === "number" && isFinite(v) ? Math.round(Math.min(hi, Math.max(lo, v))) : fb);
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
-const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Loose = { [k: string]: any };
+const obj = (v: unknown): Loose => (v && typeof v === "object" && !Array.isArray(v) ? (v as Loose) : {});
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "x";
 
 /* ---------------- Scenario forge ---------------- */
