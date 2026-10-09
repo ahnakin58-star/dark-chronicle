@@ -7,7 +7,7 @@ type Result<T> = { ok: true } & T | { ok: false; error: string };
 
 export const generateScenario = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { regionId?: string; tone?: string; heroSummary: string }) => ({
+  .inputValidator((d: { regionId?: string | undefined; tone?: string | undefined; heroSummary: string }) => ({
     regionId: typeof d?.regionId === "string" ? d.regionId : undefined,
     tone: typeof d?.tone === "string" ? d.tone : undefined,
     heroSummary: String(d?.heroSummary ?? "").slice(0, 300),
