@@ -158,3 +158,4 @@ export interface GameState {
   lastRoll: LastRoll | null;
   dmError: string | null;
 }
+export type { Json } from "@/integrations/supabase/types";

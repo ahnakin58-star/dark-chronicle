@@ -11,5 +11,8 @@
 
 ## Architecture rules
 - Game rules/state live in `src/game/` (pure data + `useGame` hook); UI in `src/components/game/` — keeps logic testable and UI swappable.
-- The Dungeon Master is behind the `DungeonMaster` interface (`src/game/dm`); swap the mock in `getDungeonMaster()` for a real AI provider via a server function — keeps keys server-side and UI unchanged.
+- The Dungeon Master is behind the `DungeonMaster` interface (`src/game/dm`), implemented by an AI DM calling server functions in `src/lib/adventure.functions.ts` — keeps keys server-side and UI unchanged.
+- AI output (scenarios, DM replies) is always normalized/clamped in `src/lib/adventure.server.ts` before the engine sees it — the engine trusts only validated data.
+- Scenarios are generated as seed (world tables in `src/game/world.ts`) → AI build → rules validation, so every tale shares one canon.
+- Adventures persist as one row per tale (scenario + game state JSON) with owner-only RLS; the play page autosaves.
 - Random rolls are computed outside React state updaters, then applied — avoids StrictMode double-invocation inconsistencies.
