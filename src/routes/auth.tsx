@@ -37,13 +37,24 @@ function AuthPage() {
     e.preventDefault();
     setBusy(true);
     setMsg(null);
-    const { data, error } =
-      mode === "in"
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin + "/auth" } });
-    setBusy(false);
-    if (error) return setMsg(error.message);
-    if (mode === "up" && !data.session) setMsg("Check your email to confirm your account, then sign in.");
+    try {
+      const { data, error } =
+        mode === "in"
+          ? await supabase.auth.signInWithPassword({ email, password })
+          : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin + "/auth" } });
+      if (error) return setMsg(error.message);
+      if (data.session) {
+        // Confirm the session is readable before entering the protected area.
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user) return nav({ to: "/adventures", replace: true });
+        return setMsg("Signed in, but the session could not be stored. Please allow site storage and try again.");
+      }
+      if (mode === "up") setMsg("Check your email to confirm your account, then sign in.");
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function google() {
