@@ -21,7 +21,7 @@ export interface ForgeOptions { regionId?: string | undefined; tone?: string | u
 
 /** Stage 1: deterministic seed from world tables — guarantees variety within canon. */
 export function seedScenario(opts: ForgeOptions) {
-  const region = REGIONS.find((r) => r.id === opts.regionId) ?? pick(REGIONS);
+  const region = REGIONS.find((r) => r["id"] === opts.regionId) ?? pick(REGIONS);
   return {
     region,
     faction: pick(FACTIONS),
@@ -65,19 +65,19 @@ Hero: ${opts.heroSummary}`;
 function normalizeScenario(raw: unknown, seed: ReturnType<typeof seedScenario>): Scenario {
   const r = obj(raw);
   const enemies: Record<string, EnemyTemplate> = {};
-  Object.entries(obj(r.enemies)).slice(0, 5).forEach(([k, v]) => {
+  Object.entries(obj(r["enemies"])).slice(0, 5).forEach(([k, v]) => {
     const e = obj(v);
     const key = slug(k);
-    const maxHp = num(e.maxHp, 6, 40, 12);
+    const maxHp = num(e["maxHp"], 6, 40, 12);
     const boss = maxHp >= 22;
     enemies[key] = {
-      name: str(e.name, 60, key),
-      description: str(e.description, 200),
+      name: str(e["name"], 60, key),
+      description: str(e["description"], 200),
       maxHp,
-      ac: num(e.ac, 10, boss ? 15 : 14, 12),
-      attackBonus: num(e.attackBonus, 2, boss ? 5 : 4, 3),
-      damage: DICE.test(str(e.damage)) ? str(e.damage) : boss ? "1d8+2" : "1d6+1",
-      xp: num(e.xp, 10, 250, boss ? 200 : 40),
+      ac: num(e["ac"], 10, boss ? 15 : 14, 12),
+      attackBonus: num(e["attackBonus"], 2, boss ? 5 : 4, 3),
+      damage: DICE.test(str(e["damage"])) ? str(e["damage"]) : boss ? "1d8+2" : "1d6+1",
+      xp: num(e["xp"], 10, 250, boss ? 200 : 40),
     };
   });
   if (!Object.keys(enemies).length) enemies["foe"] = { name: "Shadow Thing", description: "Hungry dark.", maxHp: 12, ac: 12, attackBonus: 3, damage: "1d6+1", xp: 40 };
@@ -85,48 +85,48 @@ function normalizeScenario(raw: unknown, seed: ReturnType<typeof seedScenario>):
   const bossKey = keys.reduce((a, b) => (enemies[b]!.maxHp > enemies[a]!.maxHp ? b : a));
 
   const usedIds = new Set<string>();
-  let scenes: ScenarioScene[] = arr(r.scenes).slice(0, 5).map((v, i) => {
+  let scenes: ScenarioScene[] = arr(r["scenes"]).slice(0, 5).map((v, i) => {
     const s = obj(v);
-    let id = slug(str(s.id, 40) || str(s.name, 40) || `scene-${i + 1}`);
+    let id = slug(str(s["id"], 40) || str(s["name"], 40) || `scene-${i + 1}`);
     while (usedIds.has(id)) id += "-b";
     usedIds.add(id);
-    return { id, name: str(s.name, 60, `Scene ${i + 1}`), description: str(s.description, 400), goal: str(s.goal, 200), enemies: arr(s.enemies).map((x) => slug(String(x))).filter((x) => keys.includes(x)).slice(0, 3) };
+    return { id, name: str(s["name"], 60, `Scene ${i + 1}`), description: str(s["description"], 400), goal: str(s["goal"], 200), enemies: arr(s["enemies"]).map((x) => slug(String(x))).filter((x) => keys.includes(x)).slice(0, 3) };
   });
   if (scenes.length < 2) scenes = [{ id: "start", name: "The Beginning", description: "", goal: "Find the threat.", enemies: [] }, { id: "finale", name: "The Finale", description: "", goal: "Defeat the boss.", enemies: [bossKey] }];
   const last = scenes[scenes.length - 1]!;
   if (!last.enemies.includes(bossKey)) last.enemies = [bossKey];
 
-  const quests: Quest[] = arr(r.quests).slice(0, 3).map((v, i) => {
+  const quests: Quest[] = arr(r["quests"]).slice(0, 3).map((v, i) => {
     const q = obj(v);
     return {
-      id: i === 0 ? "q-main" : slug(str(q.id, 30) || `q-side-${i}`),
-      title: str(q.title, 80, i === 0 ? "The Main Quest" : "A Side Errand"),
-      description: str(q.description, 240),
-      objectives: arr(q.objectives).slice(0, 5).map((o) => ({ text: str(o, 140), done: false })).filter((o) => o.text),
+      id: i === 0 ? "q-main" : slug(str(q["id"], 30) || `q-side-${i}`),
+      title: str(q["title"], 80, i === 0 ? "The Main Quest" : "A Side Errand"),
+      description: str(q["description"], 240),
+      objectives: arr(q["objectives"]).slice(0, 5).map((o) => ({ text: str(o, 140), done: false })).filter((o) => o["text"]),
     };
-  }).filter((q) => q.objectives.length);
+  }).filter((q) => q["objectives"].length);
   if (!quests.length) quests.push({ id: "q-main", title: "The Main Quest", description: "", objectives: [{ text: "End the threat", done: false }] });
 
-  const lore: LoreEntry[] = arr(r.lore).slice(0, 10).map((v, i) => {
+  const lore: LoreEntry[] = arr(r["lore"]).slice(0, 10).map((v, i) => {
     const l = obj(v);
-    const cat = str(l.category) as LoreCategory;
-    return { id: `l-${slug(str(l.id, 30) || String(i))}-${i}`, category: LORE_CATS.includes(cat) ? cat : "history", title: str(l.title, 80), text: str(l.text, 400) };
-  }).filter((l) => l.title && l.text);
+    const cat = str(l["category"]) as LoreCategory;
+    return { id: `l-${slug(str(l["id"], 30) || String(i))}-${i}`, category: LORE_CATS.includes(cat) ? cat : "history", title: str(l["title"], 80), text: str(l["text"], 400) };
+  }).filter((l) => l["title"] && l["text"]);
 
-  const npc = obj(r.openingNpc);
+  const npc = obj(r["openingNpc"]);
   return {
     id: `gen-${Date.now().toString(36)}`,
-    title: str(r.title, 80, "An Untold Tale"),
-    tagline: str(r.tagline, 200),
+    title: str(r["title"], 80, "An Untold Tale"),
+    tagline: str(r["tagline"], 200),
     regionId: seed.region.id,
     factionId: seed.faction.id,
     threat: seed.threat,
     twist: seed.twist,
     tone: seed.tone,
-    secrets: str(r.secrets, 1200),
-    openingNarration: str(r.openingNarration, 900, "Your tale begins."),
-    openingNpc: str(npc.name) && str(npc.line) ? { name: str(npc.name, 60), line: str(npc.line, 300) } : undefined,
-    startChoices: arr(r.startChoices).map((c) => str(c, 120)).filter(Boolean).slice(0, 4),
+    secrets: str(r["secrets"], 1200),
+    openingNarration: str(r["openingNarration"], 900, "Your tale begins."),
+    openingNpc: str(npc["name"]) && str(npc["line"]) ? { name: str(npc["name"], 60), line: str(npc["line"], 300) } : undefined,
+    startChoices: arr(r["startChoices"]).map((c) => str(c, 120)).filter(Boolean).slice(0, 4),
     scenes,
     enemies,
     quests,
@@ -163,19 +163,19 @@ function describeInput(input: DMInput) {
 export async function runDM(ctx: DMContext, input: DMInput, generate: (s: string, p: string) => Promise<unknown>): Promise<DMResponse> {
   const s = ctx.scenario;
   const c = ctx.character;
-  const sceneIdx = s.scenes.findIndex((x) => x.id === ctx.scene);
-  const scene = s.scenes[sceneIdx];
+  const sceneIdx = s["scenes"].findIndex((x) => x.id === ctx.scene);
+  const scene = s["scenes"][sceneIdx];
   const prompt = `${worldCanonText()}
 
-SCENARIO "${s.title}" — ${s.tagline}
-Region: ${regionById(s.regionId).name}. Faction: ${factionById(s.factionId).name}. Threat: ${s.threat}. Tone: ${s.tone}.
-DM-only secrets: ${s.secrets} Twist: ${s.twist}
-Scenes (in order): ${s.scenes.map((x, i) => `[${i + 1}] id="${x.id}" ${x.name}: ${x.description} Goal: ${x.goal} Enemies: ${x.enemies.join(", ") || "none"}`).join(" | ")}
-Enemy keys: ${Object.entries(s.enemies).map(([k, e]) => `${k} (${e.name})`).join(", ")}
-Quests: ${ctx.quests.map((q) => `${q.id} "${q.title}": ${q.objectives.map((o, i) => `[${i}${o.done ? " done" : ""}] ${o.text}`).join("; ")}`).join(" | ")}
-Lore ids (★ = already known): ${s.lore.map((l) => `${l.id}${ctx.knownLore.includes(l.id) ? "★" : ""} ${l.title}`).join("; ")}
+SCENARIO "${s["title"]}" — ${s["tagline"]}
+Region: ${regionById(s["regionId"]).name}. Faction: ${factionById(s["factionId"]).name}. Threat: ${s["threat"]}. Tone: ${s["tone"]}.
+DM-only secrets: ${s["secrets"]} Twist: ${s["twist"]}
+Scenes (in order): ${s["scenes"].map((x, i) => `[${i + 1}] id="${x.id}" ${x.name}: ${x.description} Goal: ${x.goal} Enemies: ${x.enemies.join(", ") || "none"}`).join(" | ")}
+Enemy keys: ${Object.entries(s["enemies"]).map(([k, e]) => `${k} (${e["name"]})`).join(", ")}
+Quests: ${ctx.quests.map((q) => `${q["id"]} "${q["title"]}": ${q["objectives"].map((o, i) => `[${i}${o["done"] ? " done" : ""}] ${o["text"]}`).join("; ")}`).join(" | ")}
+Lore ids (★ = already known): ${s["lore"].map((l) => `${l["id"]}${ctx.knownLore.includes(l["id"]) ? "★" : ""} ${l["title"]}`).join("; ")}
 
-CURRENT SCENE: ${scene ? `"${scene.id}" ${scene.name}${sceneIdx === s.scenes.length - 1 ? " (FINALE)" : ""}` : ctx.scene}
+CURRENT SCENE: ${scene ? `"${scene.id}" ${scene.name}${sceneIdx === s["scenes"].length - 1 ? " (FINALE)" : ""}` : ctx.scene}
 HERO: ${c.name}, level ${c.level} ${c.race} ${c.cls}, HP ${c.hp}/${c.maxHp}, AC ${c.ac}. Trained skills: ${c.skills.join(", ")}. Carrying: ${c.inventory.map((i) => i.name).join(", ")}.
 
 RECENT STORY:
@@ -189,36 +189,36 @@ NOW: ${describeInput(input)}`;
 function normalizeDM(raw: unknown, ctx: DMContext): DMResponse {
   const r = obj(raw);
   const s = ctx.scenario;
-  const out: DMResponse = { narration: str(r.narration, 1500, "The Chronicler pauses, then gestures for you to continue.") };
-  const npc = obj(r.npc);
-  if (str(npc.name) && str(npc.line)) out.npc = { name: str(npc.name, 60), line: str(npc.line, 400) };
-  const check = obj(r.check);
-  const skill = SKILLS.find((k) => k.toLowerCase() === str(check.skill).toLowerCase());
-  if (skill) out.check = { skill, ability: SKILL_ABILITY[skill], dc: num(check.dc, 5, 25, 13), reason: str(check.reason, 160, skill) };
-  const combat = arr(r.startCombat).map((x) => String(x)).filter((k) => k in s.enemies).slice(0, 4);
+  const out: DMResponse = { narration: str(r["narration"], 1500, "The Chronicler pauses, then gestures for you to continue.") };
+  const npc = obj(r["npc"]);
+  if (str(npc["name"]) && str(npc["line"])) out.npc = { name: str(npc["name"], 60), line: str(npc["line"], 400) };
+  const check = obj(r["check"]);
+  const skill = SKILLS.find((k) => k.toLowerCase() === str(check["skill"]).toLowerCase());
+  if (skill) out.check = { skill, ability: SKILL_ABILITY[skill], dc: num(check["dc"], 5, 25, 13), reason: str(check["reason"], 160, skill) };
+  const combat = arr(r["startCombat"]).map((x) => String(x)).filter((k) => k in s["enemies"]).slice(0, 4);
   if (combat.length) out.startCombat = combat;
-  const scene = str(r.scene);
-  if (scene && s.scenes.some((x) => x.id === scene)) out.scene = scene;
-  const objs = arr(r.completeObjective).map(obj).map((o) => ({ questId: str(o.questId), index: num(o.index, 0, 9, -1) })).filter((o) => o.index >= 0 && ctx.quests.some((q) => q.id === o.questId));
+  const scene = str(r["scene"]);
+  if (scene && s["scenes"].some((x) => x.id === scene)) out.scene = scene;
+  const objs = arr(r["completeObjective"]).map(obj).map((o) => ({ questId: str(o["questId"]), index: num(o["index"], 0, 9, -1) })).filter((o) => o["index"] >= 0 && ctx.quests.some((q) => q["id"] === o["questId"]));
   if (objs.length) out.completeObjective = objs;
-  if (DICE.test(str(r.damage))) out.damage = str(r.damage);
-  if (DICE.test(str(r.heal))) out.heal = str(r.heal);
-  const loot: Item[] = arr(r.loot).map(obj).slice(0, 3).map((l) => {
-    const name = str(l.name, 60);
-    const kind = (["potion", "misc", "weapon"].includes(str(l.kind)) ? str(l.kind) : "misc") as Item["kind"];
-    const heal = DICE.test(str(l.heal)) ? str(l.heal) : kind === "potion" ? "2d4+2" : undefined;
-    const damage = kind === "weapon" ? (DICE.test(str(l.damage)) ? str(l.damage) : "1d8") : undefined;
-    return { id: kind === "potion" && heal === "2d4+2" ? "potion-healing" : `i-${slug(name)}`, name, kind, description: str(l.description, 200), qty: 1, heal, damage, ability: kind === "weapon" ? ("str" as const) : undefined };
+  if (DICE.test(str(r["damage"]))) out.damage = str(r["damage"]);
+  if (DICE.test(str(r["heal"]))) out.heal = str(r["heal"]);
+  const loot: Item[] = arr(r["loot"]).map(obj).slice(0, 3).map((l) => {
+    const name = str(l["name"], 60);
+    const kind = (["potion", "misc", "weapon"].includes(str(l["kind"])) ? str(l["kind"]) : "misc") as Item["kind"];
+    const heal = DICE.test(str(l["heal"])) ? str(l["heal"]) : kind === "potion" ? "2d4+2" : undefined;
+    const damage = kind === "weapon" ? (DICE.test(str(l["damage"])) ? str(l["damage"]) : "1d8") : undefined;
+    return { id: kind === "potion" && heal === "2d4+2" ? "potion-healing" : `i-${slug(name)}`, name, kind, description: str(l["description"], 200), qty: 1, heal, damage, ability: kind === "weapon" ? ("str" as const) : undefined };
   }).filter((i) => i.name);
   if (loot.length) out.loot = loot;
-  const reveal = arr(r.revealLore).map(String).filter((id) => s.lore.some((l) => l.id === id));
+  const reveal = arr(r["revealLore"]).map(String).filter((id) => s["lore"].some((l) => l["id"] === id));
   if (reveal.length) out.revealLore = reveal;
-  const newLore = arr(r.newLore).map(obj).slice(0, 2).map((l) => ({ category: (LORE_CATS.includes(str(l.category) as LoreCategory) ? str(l.category) : "history") as LoreCategory, title: str(l.title, 80), text: str(l.text, 400) })).filter((l) => l.title && l.text);
+  const newLore = arr(r["newLore"]).map(obj).slice(0, 2).map((l) => ({ category: (LORE_CATS.includes(str(l["category"]) as LoreCategory) ? str(l["category"]) : "history") as LoreCategory, title: str(l["title"], 80), text: str(l["text"], 400) })).filter((l) => l["title"] && l["text"]);
   if (newLore.length) out.newLore = newLore;
-  const choices = arr(r.choices).map((c) => str(c, 120)).filter(Boolean).slice(0, 4);
+  const choices = arr(r["choices"]).map((c) => str(c, 120)).filter(Boolean).slice(0, 4);
   if (choices.length) out.choices = choices;
-  const finale = s.scenes[s.scenes.length - 1]?.id;
-  if (r.victory === true && (ctx.scene === finale || out.scene === finale)) out.victory = true;
+  const finale = s["scenes"][s["scenes"].length - 1]?.id;
+  if (r["victory"] === true && (ctx.scene === finale || out.scene === finale)) out.victory = true;
   return out;
 }
 
